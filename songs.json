@@ -1,0 +1,39 @@
+[
+  {
+    "id": "ainda-que-a-figueira",
+    "title": "Ainda Que a Figueira",
+    "scores": [
+      { "label": "SATB Completo", "url": "https://drive.google.com/file/d/EXEMPLO1/view" },
+      { "label": "Vozes Masculinas", "url": "https://drive.google.com/file/d/EXEMPLO2/view" }
+    ],
+    "voiceKits": {
+      "tenor1": "dQw4w9WgXcQ",
+      "tenor2": "dQw4w9WgXcQ",
+      "baritone": "dQw4w9WgXcQ",
+      "bass": "dQw4w9WgXcQ"
+    }
+  },
+  {
+    "id": "grandes-e-maravilhosas",
+    "title": "Grandes e Maravilhosas",
+    "scores": [
+      { "label": "Partitura Geral", "url": "https://drive.google.com/file/d/EXEMPLO3/view" }
+    ],
+    "voiceKits": {
+      "tenor1": "dQw4w9WgXcQ",
+      "baritone": "dQw4w9WgXcQ",
+      "bass": "dQw4w9WgXcQ"
+    }
+  },
+  {
+    "id": "louvai-ao-senhor",
+    "title": "Louvai ao Senhor",
+    "scores": [],
+    "voiceKits": {
+      "tenor1": "dQw4w9WgXcQ",
+      "tenor2": "dQw4w9WgXcQ",
+      "baritone": "dQw4w9WgXcQ",
+      "bass": "dQw4w9WgXcQ"
+    }
+  }
+]
