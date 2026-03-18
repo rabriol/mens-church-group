@@ -149,10 +149,10 @@ function toggleAccordion(songId) {
 }
 
 function openCard(songId) {
-  const card   = document.getElementById(`song-${songId}`);
+  const card = document.getElementById(`song-${songId}`);
+  if (!card) return;
   const body   = document.getElementById(`body-${songId}`);
   const toggle = card.querySelector('.song-toggle');
-  if (!card) return;
 
   card.classList.add('is-open');
   body.hidden = false;
