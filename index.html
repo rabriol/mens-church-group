@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conjunto Masculino — Repertório</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <span class="header-icon">🎼</span>
+      <div class="header-text">
+        <h1 class="header-title">Conjunto Masculino</h1>
+        <p class="header-subtitle">Repertório de Ensaio</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <div class="search-bar">
+      <input
+        type="search"
+        id="search-input"
+        class="search-input"
+        placeholder="🔍 Buscar música..."
+        aria-label="Buscar música"
+      >
+    </div>
+
+    <div id="song-list" class="song-list" role="list">
+      <!-- preenchido por app.js -->
+    </div>
+
+    <div id="error-message" class="error-message" hidden>
+      <p>Não foi possível carregar o repertório. Tente novamente.</p>
+    </div>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
