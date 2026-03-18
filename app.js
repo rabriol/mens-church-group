@@ -129,3 +129,113 @@ function escapeHtml(str) {
 function escapeAttr(str) {
   return String(str).replace(/"/g, '&quot;');
 }
+
+// ── Accordion ─────────────────────────────────────────────────
+function toggleAccordion(songId) {
+  const isAlreadyOpen = currentOpenId === songId;
+
+  // Fechar card atual (se houver)
+  if (currentOpenId !== null) {
+    closeCard(currentOpenId);
+  }
+
+  // Abrir o novo, se era diferente
+  if (!isAlreadyOpen) {
+    openCard(songId);
+    currentOpenId = songId;
+  } else {
+    currentOpenId = null;
+  }
+}
+
+function openCard(songId) {
+  const card   = document.getElementById(`song-${songId}`);
+  const body   = document.getElementById(`body-${songId}`);
+  const toggle = card.querySelector('.song-toggle');
+  if (!card) return;
+
+  card.classList.add('is-open');
+  body.hidden = false;
+  toggle.setAttribute('aria-expanded', 'true');
+
+  // Delegação: cliques nos botões de voz
+  body.addEventListener('click', handleVoiceClick);
+}
+
+function closeCard(songId) {
+  const card   = document.getElementById(`song-${songId}`);
+  const body   = document.getElementById(`body-${songId}`);
+  const toggle = card?.querySelector('.song-toggle');
+  if (!card) return;
+
+  card.classList.remove('is-open');
+  body.hidden = true;
+  toggle.setAttribute('aria-expanded', 'false');
+
+  // Destruir player para parar o vídeo
+  destroyPlayer(songId);
+
+  // Remover listener de voz
+  body.removeEventListener('click', handleVoiceClick);
+}
+
+// ── Player de Kit de Voz ───────────────────────────────────────
+function handleVoiceClick(e) {
+  const btn = e.target.closest('.voice-btn');
+  if (!btn) return;
+
+  const songId  = btn.dataset.song;
+  const videoId = btn.dataset.video;
+
+  // Atualizar botão ativo
+  const allButtons = document.querySelectorAll(`#body-${songId} .voice-btn`);
+  allButtons.forEach(b => b.classList.remove('is-active'));
+  btn.classList.add('is-active');
+
+  loadPlayer(songId, videoId);
+}
+
+function loadPlayer(songId, videoId) {
+  const container = document.getElementById(`player-${songId}`);
+  if (!container) return;
+
+  container.classList.add('is-visible');
+  container.innerHTML = `
+    <iframe
+      src="https://www.youtube.com/embed/${escapeAttr(videoId)}?autoplay=1&rel=0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+    ></iframe>
+  `;
+}
+
+function destroyPlayer(songId) {
+  const container = document.getElementById(`player-${songId}`);
+  if (!container) return;
+  container.classList.remove('is-visible');
+  container.innerHTML = '';
+
+  // Remover estado ativo dos botões de voz
+  document.querySelectorAll(`#body-${songId} .voice-btn`)
+    .forEach(b => b.classList.remove('is-active'));
+}
+
+// ── Filtro de busca ────────────────────────────────────────────
+function filterSongs(query) {
+  const raw = document.getElementById('song-list').dataset.songs;
+  if (!raw) return;
+
+  const songs = JSON.parse(raw);
+  const lower = query.toLowerCase();
+  const filtered = lower
+    ? songs.filter(s => s.title.toLowerCase().includes(lower))
+    : songs;
+
+  // Fechar qualquer card aberto antes de re-renderizar
+  if (currentOpenId !== null) {
+    closeCard(currentOpenId);
+    currentOpenId = null;
+  }
+
+  renderSongList(filtered);
+}
