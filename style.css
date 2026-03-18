@@ -218,3 +218,14 @@ button { cursor: pointer; font-family: inherit; }
   font-size: 13px;
   color: #856404;
 }
+
+/* ── Responsividade ── */
+@media (max-width: 480px) {
+  .header-title { font-size: 13px; letter-spacing: 1px; }
+  .header-icon  { font-size: 22px; }
+  .main-content { padding: 10px 10px; }
+  .search-bar   { padding: 10px 10px; }
+  .voice-buttons { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .voice-btn    { font-size: 10px; padding: 7px 8px; }
+  .score-chip   { font-size: 10px; padding: 4px 10px; }
+}
