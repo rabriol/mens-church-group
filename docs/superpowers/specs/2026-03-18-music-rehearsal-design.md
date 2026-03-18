@@ -59,6 +59,7 @@ music-rehearsal/
 ```
 
 Campos de `voiceKits` são opcionais — se um naipe não tiver kit, o botão não aparece.
+O campo `id` é usado como chave para o atributo `id` do elemento DOM do card (ex: `song-ainda-que-a-figueira`), permitindo referências únicas no DOM.
 
 ---
 
@@ -103,7 +104,9 @@ Cada música é um card colapsável:
 ### Accordion — Comportamento
 
 - Apenas uma música pode estar expandida por vez (fechar a anterior ao abrir outra)
+- O controle de qual card está aberto é mantido por uma variável de estado (`currentOpenId`) em `app.js`
 - Ao fechar uma música, o player do YouTube é destruído para parar o vídeo automaticamente
+- Se o usuário expandir um card sem clicar em nenhum botão de voz e depois fechar, nenhum iframe é criado
 
 ---
 
@@ -125,9 +128,9 @@ songs.json
 
 ## Error Handling
 
-- Se `songs.json` falhar ao carregar: exibir mensagem amigável na página
-- Se um campo de `voiceKits` estiver ausente: não renderizar o botão correspondente
-- Se `scores` estiver vazio: não renderizar a seção de partituras
+- Se `songs.json` falhar ao carregar: exibir mensagem de erro centralizada no lugar da lista de músicas (ex: "Não foi possível carregar o repertório. Tente novamente.")
+- Se um campo de `voiceKits` estiver ausente ou nulo: não renderizar o botão correspondente
+- Se `scores` estiver vazio ou ausente: não renderizar a seção de partituras
 
 ---
 
