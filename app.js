@@ -77,12 +77,10 @@ function parseCSVRow(line) {
 }
 
 function rowToSong(row) {
-  const scores = [];
-  for (let i = 1; i <= 5; i++) {
-    const label = row[`score_${i}_label`] ?? '';
-    const url   = row[`score_${i}_url`]   ?? '';
-    if (label && url) scores.push({ label, url });
-  }
+  const labels = (row.scores_labels ?? '').split('|').map(s => s.trim()).filter(Boolean);
+  const urls   = (row.scores_urls   ?? '').split('|').map(s => s.trim()).filter(Boolean);
+  const scores = labels.map((label, i) => ({ label, url: urls[i] ?? '' }))
+                       .filter(s => s.url !== '');
 
   const voiceKits = {};
   if (row.tenor1)   voiceKits.tenor1   = row.tenor1;
