@@ -1,6 +1,6 @@
 // ── Configuração do Google Sheets ─────────────────────────────
 // Substitua pelo ID da sua planilha (compartilhada como "qualquer pessoa com o link")
-const SHEET_ID = 'SEU_SHEET_ID_AQUI';
+const SHEET_ID = '1K9IXxplxKbjXlGNGjSZKtUzMP-Jj5GJqUE7FGXe9z-k';
 const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 
 // ── Estado global ──────────────────────────────────────────────
