@@ -1,3 +1,8 @@
+// ── Configuração do Google Sheets ─────────────────────────────
+// Substitua pelo ID da sua planilha (compartilhada como "qualquer pessoa com o link")
+const SHEET_ID = 'SEU_SHEET_ID_AQUI';
+const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+
 // ── Estado global ──────────────────────────────────────────────
 let currentOpenId = null; // ID da música atualmente expandida
 
@@ -19,15 +24,86 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── Carregamento de dados ──────────────────────────────────────
 async function loadSongs() {
   try {
-    const res = await fetch('songs.json');
+    const res = await fetch(SHEET_CSV_URL);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const songs = await res.json();
+    const csv = await res.text();
+    const songs = parseSheetCSV(csv);
     renderSongList(songs);
     storeSongs(songs);
   } catch (err) {
-    console.error('Falha ao carregar songs.json:', err);
+    console.error('Falha ao carregar planilha:', err);
     showError();
   }
+}
+
+// ── Parser CSV do Google Sheets ────────────────────────────────
+function parseSheetCSV(csv) {
+  const lines = csv.split('\n').filter(l => l.trim() !== '');
+  if (lines.length < 2) return [];
+
+  const headers = parseCSVRow(lines[0]);
+  const rows = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCSVRow(lines[i]);
+    if (values.every(v => v.trim() === '')) continue; // pula linha vazia
+    const row = {};
+    headers.forEach((h, idx) => { row[h.trim()] = (values[idx] ?? '').trim(); });
+    rows.push(row);
+  }
+
+  return rows.map(rowToSong).filter(s => s.title !== '');
+}
+
+function parseCSVRow(line) {
+  const cells = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+      else { inQuotes = !inQuotes; }
+    } else if (ch === ',' && !inQuotes) {
+      cells.push(current);
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  cells.push(current);
+  return cells;
+}
+
+function rowToSong(row) {
+  const scores = [];
+  for (let i = 1; i <= 5; i++) {
+    const label = row[`score_${i}_label`] ?? '';
+    const url   = row[`score_${i}_url`]   ?? '';
+    if (label && url) scores.push({ label, url });
+  }
+
+  const voiceKits = {};
+  if (row.tenor1)   voiceKits.tenor1   = row.tenor1;
+  if (row.tenor2)   voiceKits.tenor2   = row.tenor2;
+  if (row.baritone) voiceKits.baritone = row.baritone;
+  if (row.bass)     voiceKits.bass     = row.bass;
+
+  return {
+    id:        slugify(row.title ?? ''),
+    title:     row.title ?? '',
+    scores,
+    voiceKits,
+  };
+}
+
+function slugify(str) {
+  return str
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 function storeSongs(songs) {
