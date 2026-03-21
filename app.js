@@ -83,10 +83,10 @@ function rowToSong(row) {
                        .filter(s => s.url !== '');
 
   const voiceKits = {};
-  if (row.tenor1)   voiceKits.tenor1   = row.tenor1;
-  if (row.tenor2)   voiceKits.tenor2   = row.tenor2;
-  if (row.baritone) voiceKits.baritone = row.baritone;
-  if (row.bass)     voiceKits.bass     = row.bass;
+  if (row.tenor1)   voiceKits.tenor1   = extractYouTubeId(row.tenor1);
+  if (row.tenor2)   voiceKits.tenor2   = extractYouTubeId(row.tenor2);
+  if (row.baritone) voiceKits.baritone = extractYouTubeId(row.baritone);
+  if (row.bass)     voiceKits.bass     = extractYouTubeId(row.bass);
 
   return {
     id:        slugify(row.title ?? ''),
@@ -94,6 +94,22 @@ function rowToSong(row) {
     scores,
     voiceKits,
   };
+}
+
+function extractYouTubeId(value) {
+  try {
+    const url = new URL(value);
+    // youtube.com/watch?v=ID
+    if (url.searchParams.get('v')) return url.searchParams.get('v');
+    // youtu.be/ID
+    if (url.hostname === 'youtu.be') return url.pathname.slice(1);
+    // youtube.com/embed/ID
+    const embedMatch = url.pathname.match(/\/embed\/([^/?]+)/);
+    if (embedMatch) return embedMatch[1];
+  } catch {
+    // não é URL — assume que já é o ID
+  }
+  return value;
 }
 
 function slugify(str) {
