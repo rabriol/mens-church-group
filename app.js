@@ -276,8 +276,8 @@ function loadPlayer(songId, videoId) {
   container.classList.add('is-visible');
   container.innerHTML = `
     <iframe
-      src="https://www.youtube.com/embed/${escapeAttr(videoId)}?autoplay=1&rel=0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      src="https://www.youtube.com/embed/${escapeAttr(videoId)}?rel=0"
+      allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
       allowfullscreen
     ></iframe>
   `;
