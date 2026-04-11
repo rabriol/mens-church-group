@@ -15,6 +15,12 @@ const VOICE_LABELS = {
   bass:     'Baixo',
 };
 
+const LANG_CONFIG = {
+  pt: { label: 'Português', flag: '🇧🇷' },
+  es: { label: 'Español',   flag: '🇪🇸' },
+  en: { label: 'English',   flag: '🇺🇸' },
+};
+
 // ── Entry point ────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   loadSongs();
@@ -54,7 +60,8 @@ function parseSheetCSV(csv) {
     rows.push(row);
   }
 
-  return rows.map(rowToSong).filter(s => s.title !== '');
+  const songs = rows.map(rowToSong).filter(s => s.title !== '');
+  return mergeLangVariants(songs);
 }
 
 function parseCSVRow(line) {
@@ -78,11 +85,20 @@ function parseCSVRow(line) {
   return cells;
 }
 
+function parseScoreUrls(urlsStr) {
+  const urls = (urlsStr ?? '').split('|').map(s => s.trim()).filter(Boolean);
+  return urls.map(url => ({ label: 'PDF', url }));
+}
+
 function rowToSong(row) {
-  const labels = (row.scores_labels ?? '').split('|').map(s => s.trim()).filter(Boolean);
-  const urls   = (row.scores_urls   ?? '').split('|').map(s => s.trim()).filter(Boolean);
-  const scores = labels.map((label, i) => ({ label, url: urls[i] ?? '' }))
-                       .filter(s => s.url !== '');
+  // scores_urls → Portuguese, scores_es_urls → Spanish, scores_en_urls → English
+  const scoresByLang = {};
+  const ptScores = parseScoreUrls(row.scores_urls);
+  if (ptScores.length > 0) scoresByLang.pt = ptScores;
+  for (const lang of ['es', 'en']) {
+    const scores = parseScoreUrls(row[`scores_${lang}_urls`]);
+    if (scores.length > 0) scoresByLang[lang] = scores;
+  }
 
   const voiceKits = {};
   if (row.tenor1)   voiceKits.tenor1   = extractYouTubeId(row.tenor1);
@@ -93,9 +109,74 @@ function rowToSong(row) {
   return {
     id:        slugify(row.title ?? ''),
     title:     row.title ?? '',
-    scores,
+    scoresByLang,
     voiceKits,
   };
+}
+
+// ── Agrupamento de variantes por idioma ───────────────────────
+const LANG_SUFFIXES = [
+  { pattern: /\s*\(espanhol\)\s*$/i, lang: 'es' },
+  { pattern: /\s*\(español\)\s*$/i,  lang: 'es' },
+  { pattern: /\s*\(spanish\)\s*$/i,  lang: 'es' },
+  { pattern: /\s*\(inglês\)\s*$/i,   lang: 'en' },
+  { pattern: /\s*\(ingles\)\s*$/i,   lang: 'en' },
+  { pattern: /\s*\(english\)\s*$/i,  lang: 'en' },
+];
+
+function detectLangSuffix(title) {
+  for (const { pattern, lang } of LANG_SUFFIXES) {
+    if (pattern.test(title)) {
+      return { baseTitle: title.replace(pattern, ''), lang };
+    }
+  }
+  return null;
+}
+
+function mergeLangVariants(songs) {
+  const baseMap = new Map(); // baseTitle (lowercase) → index in result
+  const result = [];
+
+  for (const song of songs) {
+    const detected = detectLangSuffix(song.title);
+
+    if (detected) {
+      // This is a variant — merge into base song
+      const key = detected.baseTitle.toLowerCase();
+      const baseIdx = baseMap.get(key);
+
+      if (baseIdx !== undefined) {
+        const base = result[baseIdx];
+        const existingUrls = new Set(
+          Object.values(base.scoresByLang).flat().map(s => s.url)
+        );
+        const addUnique = (lang, scores) => {
+          const unique = scores.filter(s => !existingUrls.has(s.url));
+          if (unique.length === 0) return;
+          base.scoresByLang[lang] = (base.scoresByLang[lang] ?? []).concat(unique);
+          unique.forEach(s => existingUrls.add(s.url));
+        };
+        // Move this variant's PT scores into the detected language
+        if (song.scoresByLang.pt) addUnique(detected.lang, song.scoresByLang.pt);
+        // Also merge any explicitly tagged scores
+        for (const [lang, scores] of Object.entries(song.scoresByLang)) {
+          if (lang !== 'pt') addUnique(lang, scores);
+        }
+        // Merge voice kits (base takes priority)
+        for (const [voice, id] of Object.entries(song.voiceKits)) {
+          if (!base.voiceKits[voice]) base.voiceKits[voice] = id;
+        }
+        continue; // don't add variant as separate entry
+      }
+    }
+
+    // Base song or no match found — add to results
+    const key = (detected ? detected.baseTitle : song.title).toLowerCase();
+    baseMap.set(key, result.length);
+    result.push(song);
+  }
+
+  return result;
 }
 
 function extractYouTubeId(value) {
@@ -145,10 +226,12 @@ function renderSongList(songs) {
 }
 
 function createSongCard(song) {
-  const scoreCount = song.scores?.length ?? 0;
+  const langs      = Object.keys(song.scoresByLang ?? {});
+  const scoreCount = langs.reduce((sum, l) => sum + song.scoresByLang[l].length, 0);
   const kitCount   = Object.keys(song.voiceKits ?? {}).length;
   const metaParts  = [];
   if (scoreCount > 0) metaParts.push(`${scoreCount} partitura${scoreCount > 1 ? 's' : ''}`);
+  if (langs.length > 1) metaParts.push(`${langs.length} idiomas`);
   if (kitCount   > 0) metaParts.push(`${kitCount} kit${kitCount > 1 ? 's' : ''} de voz`);
 
   const card = document.createElement('div');
@@ -171,7 +254,7 @@ function createSongCard(song) {
       </svg>
     </button>
     <div class="song-body" id="body-${song.id}" hidden>
-      ${renderScores(song.scores)}
+      ${renderScores(song.id, song.scoresByLang)}
       ${renderVoiceKit(song.id, song.voiceKits)}
     </div>
   `;
@@ -182,11 +265,19 @@ function createSongCard(song) {
   return card;
 }
 
-function renderScores(scores) {
-  if (!scores || scores.length === 0) return '';
-  const chips = scores.map(s =>
-    `<a class="score-chip" href="${escapeAttr(s.url)}" target="_blank" rel="noopener">📄 ${escapeHtml(s.label)}</a>`
-  ).join('');
+function renderScores(songId, scoresByLang) {
+  if (!scoresByLang) return '';
+  const langs = Object.keys(scoresByLang);
+  if (langs.length === 0) return '';
+
+  const chips = langs.flatMap(lang => {
+    const cfg = LANG_CONFIG[lang] ?? { label: lang, flag: '' };
+    const prefix = `${cfg.flag} `;
+    return scoresByLang[lang].map(s =>
+      `<a class="score-chip" href="${escapeAttr(s.url)}" target="_blank" rel="noopener">${prefix}${escapeHtml(s.label)}</a>`
+    );
+  }).join('');
+
   return `
     <div class="scores-section">
       <div class="section-label">Partituras</div>

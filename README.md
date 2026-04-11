@@ -9,8 +9,10 @@ Página estática que carrega o repertório de ensaio direto de uma planilha do 
 Crie uma planilha no Google Sheets com as seguintes colunas na primeira linha (exatamente assim):
 
 ```
-title | score_1_label | score_1_url | score_2_label | score_2_url | score_3_label | score_3_url | score_4_label | score_4_url | score_5_label | score_5_url | tenor1 | tenor2 | baritone | bass
+title | scores_urls | scores_es_urls | scores_en_urls | tenor1 | tenor2 | baritone | bass
 ```
+
+`scores_urls` são as partituras em português. Para espanhol e inglês, use `scores_es_urls` e `scores_en_urls`. Use `|` como separador para múltiplas URLs no mesmo idioma. Todas as partituras são exibidas como "PDF". Preencha apenas os idiomas disponíveis — quando há mais de um idioma, cada chip mostra a bandeira correspondente.
 
 Cada linha a seguir é uma música. Deixe vazia qualquer célula que não se aplique.
 
@@ -35,12 +37,10 @@ Na planilha, adicione uma linha:
 
 | Coluna | Exemplo | Obrigatório? |
 |--------|---------|-------------|
-| `title` | Ainda Que a Figueira | ✅ |
-| `score_1_label` | SATB Completo | — |
-| `score_1_url` | https://drive.google.com/file/d/.../view | — |
-| `score_2_label` | Vozes Masculinas | — |
-| `score_2_url` | https://drive.google.com/file/d/.../view | — |
-| *(até score_5)* | | — |
+| `title` | Ainda Que a Figueira | Sim |
+| `scores_urls` | https://drive.google.com/.../view | — |
+| `scores_es_urls` | https://drive.google.com/.../view | — |
+| `scores_en_urls` | https://drive.google.com/.../view | — |
 | `tenor1` | dQw4w9WgXcQ | — |
 | `tenor2` | dQw4w9WgXcQ | — |
 | `baritone` | dQw4w9WgXcQ | — |
